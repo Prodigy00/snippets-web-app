@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"github.com/Prodigy00/snippetbox/internal/models"
 	"html/template"
 	"log"
@@ -24,8 +25,12 @@ type application struct {
 func main() {
 	//cli flags preferred to env vars for addr config
 	addr := flag.String("addr", ":4001", "HTTP network address")
+	sqlUser := os.Getenv("SQL_USER_NAME")
+	sqlPwd := os.Getenv("SQL_PWD")
 
-	dsn := flag.String("dsn", "root:deMilade123@@/snippetbox?parseTime=true", "MySQL data source name")
+	dsnVal := fmt.Sprintf("%s:%s@/snippetbox?parseTime=true", sqlUser, sqlPwd)
+
+	dsn := flag.String("dsn", dsnVal, "MySQL data source name")
 	// Importantly, we use the flag.Parse() function to parse the command-line flag.
 	// This reads in the command-line flag value and assigns it to the addr
 	// variable. You need to call this *before* you use the addr variable
