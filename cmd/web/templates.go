@@ -4,7 +4,19 @@ import (
 	"github.com/Prodigy00/snippetbox/internal/models"
 	"html/template"
 	"path/filepath"
+	"time"
 )
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
+}
+
+// Initialize a template.FuncMap object and store it in a global variable. This is
+// essentially a string-keyed map which acts as a lookup between the names of our
+// custom template functions and the functions themselves.
+var functions = template.FuncMap{
+	"humanDate": humanDate,
+}
 
 type templateData struct {
 	CurrentYear int
@@ -29,7 +41,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		//and assign it to the name variable.
 		name := filepath.Base(page)
 
-		ts, err := template.ParseFiles("./ui/html/base.tmpl.html")
+		ts, err := template.New(name).Funcs(functions).ParseFiles("./ui/html/base.tmpl.html")
 		if err != nil {
 			return nil, err
 		}
