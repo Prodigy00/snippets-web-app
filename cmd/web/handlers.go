@@ -4,17 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Prodigy00/snippetbox/internal/models"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
 )
 
 // eq to func logicFunc(res, req){} in express
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.notFound(w)
-		return
-	}
-
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, err)
@@ -27,8 +23,14 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-	queryParam := r.URL.Query().Get("id")
-	id, err := strconv.Atoi(queryParam)
+	// When httprouter is parsing a request, the values of any named parameters
+	//will be stored in the request context. We'll talk about request context
+	//in detail later in the book, but for now it's enough to know that you can
+	//use the ParamsFromContext() function to retrieve a slice containing these
+	//parameter names and values like so:
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
 		return
@@ -50,6 +52,12 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	app.render(w, http.StatusOK, "create.tmpl.html", data)
+}
+
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", "POST") //needs to happen before you call write/writeHead!
 		//w.WriteHeader(405)
@@ -67,7 +75,7 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	redirectUrl := fmt.Sprintf("/snippet/view?id=%d", id)
+	redirectUrl := fmt.Sprintf("/snippet/view/%d", id)
 
 	// Redirect the user to the relevant page for the snippet.
 	http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
