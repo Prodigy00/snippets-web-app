@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Prodigy00/snippetbox/internal/models"
+	"github.com/go-playground/form/v4"
 	"html/template"
 	"log"
 	"net/http"
@@ -18,6 +19,7 @@ type application struct {
 	infoLog       *log.Logger
 	snippets      *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 // Don't use DefaultServeMux, always define a http.NewServeMux() in main
@@ -59,11 +61,14 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	formDecoder := form.NewDecoder()
+
 	app := &application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
 		snippets:      &models.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	}
 
 	// Initialize a new http.Server struct. We set the Addr and Handler fields so
